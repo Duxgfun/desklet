@@ -37,25 +37,21 @@ fn get_sys_stats(state: tauri::State<AppState>) -> (f32, f32) {
 }
 
 #[tauri::command]
-fn get_media_info() -> (String, String) {
+async fn get_media_info() -> (String, String) {
     #[cfg(target_os = "windows")]
     {
         use windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager;
-        if let Ok(manager_op) = GlobalSystemMediaTransportControlsSessionManager::RequestAsync() {
-            if let Ok(manager) = manager_op.get() {
-                if let Ok(session) = manager.GetCurrentSession() {
-                    if let Ok(props_op) = session.TryGetMediaPropertiesAsync() {
-                        if let Ok(props) = props_op.get() {
-                            let title = props.Title().map(|s| s.to_string()).unwrap_or_default();
-                            let artist = props.Artist().map(|s| s.to_string()).unwrap_or_default();
-                            return (title, artist);
-                        }
-                    }
-                }
-            }
+        let result = (|| -> windows::core::Result<(String, String)> {
+            let manager = GlobalSystemMediaTransportControlsSessionManager::RequestAsync()?.join()?;
+            let session = manager.GetCurrentSession()?;
+            let props = session.TryGetMediaPropertiesAsync()?.join()?;
+            Ok((props.Title()?.to_string(), props.Artist()?.to_string()))
+        })();
+        if let Ok(info) = result {
+            return info;
         }
     }
-    ("".to_string(), "".to_string())
+    (String::new(), String::new())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
