@@ -36,6 +36,28 @@ fn get_sys_stats(state: tauri::State<AppState>) -> (f32, f32) {
     (cpu, ram)
 }
 
+#[tauri::command]
+fn get_media_info() -> (String, String) {
+    #[cfg(target_os = "windows")]
+    {
+        use windows::Media::Control::GlobalSystemMediaTransportControlsSessionManager;
+        if let Ok(manager_op) = GlobalSystemMediaTransportControlsSessionManager::RequestAsync() {
+            if let Ok(manager) = manager_op.get() {
+                if let Ok(session) = manager.GetCurrentSession() {
+                    if let Ok(props_op) = session.TryGetMediaPropertiesAsync() {
+                        if let Ok(props) = props_op.get() {
+                            let title = props.Title().map(|s| s.to_string()).unwrap_or_default();
+                            let artist = props.Artist().map(|s| s.to_string()).unwrap_or_default();
+                            return (title, artist);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    ("".to_string(), "".to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -43,7 +65,7 @@ pub fn run() {
             sys: Mutex::new(System::new_all()),
         })
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet, pin_to_desktop, get_sys_stats])
+        .invoke_handler(tauri::generate_handler![greet, pin_to_desktop, get_sys_stats, get_media_info])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

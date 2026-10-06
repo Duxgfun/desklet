@@ -9,6 +9,7 @@
     { id: 3, type: 'notes', x: 100, y: 300 },
     { id: 4, type: 'pomodoro', x: 400, y: 300 },
     { id: 5, type: 'monitor', x: 700, y: 100 },
+    { id: 6, type: 'media', x: 700, y: 300 },
   ];
 
   // Theme data (Styling Engine)
@@ -40,6 +41,11 @@
     condition: '☁️',
     city: 'Loading...',
     aqi: '--'
+  };
+
+  let media = {
+    title: 'Not playing',
+    artist: ''
   };
 
   function onMouseDown(e, widget) {
@@ -123,6 +129,10 @@
       const stats = await invoke('get_sys_stats');
       cpuUsage = Math.round(stats[0]);
       ramUsage = Math.round(stats[1]);
+      
+      const mediaInfo = await invoke('get_media_info');
+      media.title = mediaInfo[0] || 'Not playing';
+      media.artist = mediaInfo[1] || '';
     } catch (e) {
       // Ignore when running outside Tauri
     }
@@ -275,6 +285,16 @@
           
           <div class="flex justify-between gap-4 mt-2"><span>RAM</span> <span>{ramUsage}%</span></div>
           <div class="w-full bg-white/20 h-1.5 rounded overflow-hidden"><div class="bg-green-400 h-full rounded transition-all duration-1000" style="width: {ramUsage}%"></div></div>
+        </div>
+      {:else if widget.type === 'media'}
+        <div class="flex items-center gap-4 w-48">
+          <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center animate-spin" style="animation-duration: 4s;">
+            🎵
+          </div>
+          <div class="flex-1 overflow-hidden">
+            <h3 class="font-semibold text-sm truncate">{media.title}</h3>
+            <p class="text-xs opacity-70 truncate">{media.artist}</p>
+          </div>
         </div>
       {/if}
     </div>
