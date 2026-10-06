@@ -7,8 +7,7 @@ use windows::Win32::{
 };
 
 #[cfg(target_os = "windows")]
-pub fn attach_to_desktop(window_hwnd: *mut std::ffi::c_void) {
-    let hwnd = HWND(window_hwnd as _);
+pub fn attach_to_desktop(hwnd: HWND) {
     unsafe {
         let progman = FindWindowW(windows::core::w!("Progman"), None).unwrap_or(HWND::default());
         
@@ -44,6 +43,6 @@ pub fn attach_to_desktop(window_hwnd: *mut std::ffi::c_void) {
 }
 
 #[cfg(not(target_os = "windows"))]
-pub fn attach_to_desktop(_window_hwnd: *mut std::ffi::c_void) {
+pub fn attach_to_desktop<T>(_window_hwnd: T) {
     // macOS/Linux implementation or no-op
 }

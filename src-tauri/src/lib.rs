@@ -1,5 +1,5 @@
 mod sys;
-use tauri::{Manager, Window};
+use tauri::Window;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -17,9 +17,8 @@ struct AppState {
 #[tauri::command]
 fn pin_to_desktop(window: Window) {
     if let Ok(hwnd) = window.hwnd() {
-        // hwnd is an `isize` or `*mut c_void` depending on the platform, we cast it
         #[cfg(target_os = "windows")]
-        sys::attach_to_desktop(hwnd as *mut std::ffi::c_void);
+        sys::attach_to_desktop(hwnd);
     }
 }
 
